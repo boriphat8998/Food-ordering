@@ -51,12 +51,15 @@ export async function placeOrder(items, tableNumber) {
 }
 
 // ดึง log การสั่งล่าสุด (จำกัดจำนวนแถว)
-export async function getPurchases(limit = 100) {
-  const { data, error } = await supabase
-    .from("purchases")
-    .select()
-    .order("created_at", { ascending: false })
-    .limit(limit);
+// ถ้าให้ tableNumber จะกรองตามหมายเลขโต๊ะก่อนแล้วเรียงจากล่าสุด
+export async function getPurchases(limit = 100, tableNumber = null) {
+  let query = supabase.from("purchases").select().order("created_at", { ascending: false }).limit(limit);
+
+  if (tableNumber !== null && tableNumber !== "" && tableNumber !== "all") {
+    query = query.eq("table_number", Number(tableNumber));
+  }
+
+  const { data, error } = await query;
   if (error) throw error;
   return data || [];
 }

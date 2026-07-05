@@ -5,12 +5,14 @@ import { supabase } from "@/app/lib/supabaseClient";
 // ดึงข้อมูลด้วย await ตรง ๆ ได้เลย ไม่ต้องใช้ useState/useEffect
 export const dynamic = "force-dynamic"; // ให้ข้อมูลสดเสมอ ไม่ถูก cache
 
-export default async function PurchasesPage() {
+export default async function PurchasesPage({ searchParams }) {
   if (!supabase)
     return <p className="warn">ยังไม่ได้เชื่อม Supabase — ตั้งค่า .env.local ก่อน</p>;
 
-  // ดึง log การสั่ง เรียงรายการล่าสุดก่อน
-  const purchases = await getPurchases(100);
+  const selectedTable = searchParams?.table ?? "all";
+
+  // ดึง log การสั่ง เรียงรายการล่าสุดก่อน และกรองตามโต๊ะถ้าต้องการ
+  const purchases = await getPurchases(100, selectedTable);
 
   return (
     <div>
@@ -18,6 +20,17 @@ export default async function PurchasesPage() {
       <p className="muted" style={{ marginBottom: "0.9rem" }}>
         รวมจากทุกโต๊ะ ทุกเครื่องที่เชื่อมฐานข้อมูลเดียวกัน — ลองให้เพื่อนสั่งจากเครื่องของเขา แล้วรีเฟรชหน้านี้
       </p>
+
+      <form method="get" className="filter-row" style={{ marginBottom: "1rem" }}>
+        <label htmlFor="table" className="muted">กรองตามหมายเลขโต๊ะ</label>
+        <select id="table" name="table" className="select" defaultValue={selectedTable}>
+          <option value="all">ทุกโต๊ะ</option>
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((table) => (
+            <option key={table} value={table}>โต๊ะ {table}</option>
+          ))}
+        </select>
+        <button type="submit" className="btn btn-primary">ค้นหา</button>
+      </form>
 
       <table className="data-table">
         <thead>
